@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Small Social Space (Max 20 People)</title>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { max-width: 600px; margin: 20px auto; padding: 0 20px; background: #f0f2f5; }
+        .box { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input, textarea, button { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        button { background: #1877f2; color: white; border: none; cursor: pointer; }
+        button:hover { background: #155fcc; }
+        .post { border-top: 1px solid #eee; padding: 15px 0; margin-top: 10px; }
+        .author { font-weight: bold; color: #1877f2; }
+        .time { color: #888; font-size: 12px; }
+        #limit-msg { color: #e74c3c; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+<h1>My Private Social Group</h1>
+<p>Total allowed members: 20</p>
+<p id="limit-msg">⚠️ Member limit reached! No new accounts can be created.</p>
+
+<!-- Registration/Login -->
+<div class="box" id="auth-area">
+    <h3>Join / Log In</h3>
+    <input type="text" id="username" placeholder="Enter your nickname (max 20 members)">
+    <button onclick="joinOrLogin()">Continue</button>
+</div>
+
+<!-- Post Area -->
+<div class="box" id="post-area" style="display: none;">
+    <h3>Welcome, <span id="current-user"></span>!</h3>
+    <textarea id="new-post" placeholder="Share something with the group..." rows="3"></textarea>
+    <button onclick="addPost()">Post Update</button>
+</div>
+
+<!-- Feed -->
+<div class="box">
+    <h3>Group Feed</h3>
+    <div id="feed"></div>
+</div>
+
+<script>
+// Store data locally in your browser
+let members = JSON.parse(localStorage.getItem('groupMembers')) || [];
+let posts = JSON.parse(localStorage.getItem('groupPosts')) || [];
+const MAX_MEMBERS = 20;
+
+// Check limit on load
+if(members.length >= MAX_MEMBERS) {
+    document.getElementById('limit-msg').style.display = 'block';
+    document.getElementById('username').disabled = true;
+}
+
+function joinOrLogin() {
+    let name = document.getElementById('username').value.trim();
+    if(!name) return alert('Please enter a nickname!');
+
+    // Register if new user
+    if(!members.includes(name)) {
+        if(members.length >= MAX_MEMBERS) {
+            return alert('Sorry! We already have 20 members, no more can join.');
+        }
+        members.push(name);
+        localStorage.setItem('groupMembers', JSON.stringify(members));
+    }
+
+    // Log in success
+    document.getElementById('auth-area').style.display = 'none';
+    document.getElementById('post-area').style.display = 'block';
+    document.getElementById('current-user').textContent = name;
+    loadPosts();
+}
+
+function addPost() {
+    let text = document.getElementById('new-post').value.trim();
+    let user = document.getElementById('current-user').textContent;
+    if(!text) return;
+
+    posts.unshift({
+        author: user,
+        content: text,
+        time: new Date().toLocaleString()
+    });
+    localStorage.setItem('groupPosts', JSON.stringify(posts));
+    document.getElementById('new-post').value = '';
+    loadPosts();
+}
+
+function loadPosts() {
+    let feed = document.getElementById('feed');
+    feed.innerHTML = '';
+    posts.forEach(p => {
+        feed.innerHTML += `
+            <div class="post">
+                <div class="author">${p.author}</div>
+                <div class="time">${p.time}</div>
+                <p>${p.content}</p>
+            </div>
+        `;
+    });
+}
+</script>
+
+</body>
+</html>
